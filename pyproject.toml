@@ -13,9 +13,13 @@ dependencies = [
     "langchain-openai>=1.2.1",
     "langgraph>=1.0.0",
     "mem0ai[nlp]>=2.0.1",
+    "prompt-toolkit>=3.0.52",
     "python-dotenv>=1.0.1",
     "qdrant-client>=1.17.1",
 ]
+
+[project.scripts]
+agent-chat = "src.interact.cli:main"
 
 
 [project.optional-dependencies]
@@ -33,6 +37,7 @@ packages = [
     "util",
     "src",
     "src.config",
+    "src.interact",
     "src.util",
 ]
 [tool.setuptools.package-dir]
@@ -42,6 +47,7 @@ packages = [
 "util" = "src/util"
 "src" = "src"
 "src.config" = "src/config"
+"src.interact" = "src/interact"
 "src.util" = "src/util"
 
 

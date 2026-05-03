@@ -117,11 +117,19 @@ async def inject_memory_middleware(
     user_id = resolve_configurable_value("user_id", "default_user")
     messages = state.get("messages", [])
     user_input = _get_latest_message_by_role(messages, _is_user_message)
-    memories = await memory_manager.search_memories(user_id=user_id, query=user_input)
+    memory_search_failed = False
+    try:
+        memories = await memory_manager.search_memories(user_id=user_id, query=user_input)
+    except RuntimeError:
+        # Memory service instability should not block the main conversation path.
+        memories = []
+        memory_search_failed = True
 
     memory_lines = ["## 记忆补充", "- 你也擅长数学和基础计算，可在必要时调用 add 工具。"]
     if memories:
         memory_lines.extend(f"- {memory}" for memory in memories)
+    elif memory_search_failed:
+        memory_lines.append("- 当前无法读取历史记忆，请仅基于本轮上下文继续回答。")
     else:
         memory_lines.append("- 如果当前问题缺少相关信息，请严格回复“我不知道。”")
     memory_section = "\n".join(memory_lines)
