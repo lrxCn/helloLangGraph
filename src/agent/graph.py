@@ -131,7 +131,7 @@ async def inject_memory_middleware(
     elif memory_search_failed:
         memory_lines.append("- 当前无法读取历史记忆，请仅基于本轮上下文继续回答。")
     else:
-        memory_lines.append("- 如果当前问题缺少相关信息，请严格回复“我不知道。”")
+        memory_lines.append("- 缺少记忆时不要编造，但先自然回应当前输入。")
     memory_section = "\n".join(memory_lines)
 
     memory_msg = SystemMessage(
@@ -168,6 +168,7 @@ model = ChatOpenAI(
     model=settings.openai_model_name,
     api_key=settings.openai_api_key,
     base_url=settings.openai_base_url,
+    temperature=0,
 )
 
 agent = create_agent(
