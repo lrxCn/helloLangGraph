@@ -28,6 +28,9 @@
 
 ### 任务 3：编写 LangGraph 中间件集成
 修改 `src/agent/graph.py`，将记忆逻辑解耦为中间件：
+0. **会话标识获取（必做）**：
+   - 在进入中间件逻辑前，统一调用 `resolve_configurable_value("user_id", "default_user")` 获取 `user_id`。
+   - `user_id` 的用途必须明确：作为 Mem0 的用户隔离键，用于**按用户检索记忆**与**按用户归档记忆**，防止不同会话/用户的记忆串线。
 1. **`inject_memory_middleware` (@before_model)**：
    - 根据当前 `user_input` 异步检索 Mem0 记忆。
    - 将记忆内容注入 `state["messages"]` 或动态更新 `system_prompt`。
@@ -35,9 +38,14 @@
    - 在对话执行完成后，自动提取本次对话的关键信息并存入长期记忆。
    - **重要兼容性**：在提取消息时，必须同时识别 `ai` 和 `assistant` 角色类型，防止归档遗漏。
 
+### 任务 4：创建 utils 目录并沉淀通用函数
+1. 新建 `src/util/` 目录，用于承载跨模块复用的通用能力（禁止把通用函数长期放在 `src/agent/` 内）。
+2. 第一个通用函数为 `resolve_configurable_value(key, default_value)`，文件位置：`src/util/configurable.py`。
+3. 该函数负责统一读取 `get_config()` 下的 `configurable`，并按优先级返回：`configurable.get(key)` > `configurable.get("thread_id", default_value)`。
+
 # 代码规范与要求
 - **异步化**：由于运行在 LangGraph Dev 环境，所有中间件和 IO 操作必须使用 `async/await`。
-- **配置读取规范（基于当前实现）**：在获取 `user_id` 时，应通过 `get_config()` 读取配置并遵循优先级：`configurable.get("user_id")` > `configurable.get("thread_id")` > `"default_user"`。即先取 `config = get_config()`，再取 `configurable = config.get("configurable", {})`；当前实现未使用 `runtime.context`。
+- **配置读取规范（基于当前实现）**：配置读取必须封装为通用函数并放在 util 目录（如 `src/util/configurable.py` 中的 `resolve_configurable_value(key, default_value)`），调用时传入字符串参数（示例：`resolve_configurable_value("user_id", "default_user")`）。函数内部通过 `get_config()` 读取 `configurable = config.get("configurable", {})`，并遵循优先级：`configurable.get(key)` > `configurable.get("thread_id", default_value)`。
 - **Mem0 配置细节**：当 LLM 或 Embedder 使用 OpenAI 兼容模型（如硅基流动）时，**必须统一使用 `openai_base_url`** 作为参数名（禁用 `base_url`），且 LLM 的 `temperature` 必须显式设置为 `0`，否则会导致初始化失败或提取不稳定。
 - **Search 接口规范**：Mem0 2.0+ 的 `search` 方法必须使用 `filters={"user_id": user_id}` 传参。同时注意其返回格式可能为 `{"results": [...]}`，**严禁**直接遍历返回对象，必须先判断类型并提取其中的结果列表，防止将键名 `"results"` 误存为记忆内容。
 - **向量维度冲突与锁定**：如果使用非 OpenAI 原生模型（如 BGE-M3），**必须**在 `vector_store` 的 `config` 中显式指定 `"embedding_model_dims": 1024`。否则 Mem0 会默认以 1536 维度创建集合，导致写入失败。如果已经报维度错误，必须删除 Qdrant 中的 `mem0`, `mem0_entities`, `mem0migrations` 并在启动前手动以 1024 维度预建。

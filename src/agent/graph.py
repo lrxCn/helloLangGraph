@@ -17,7 +17,7 @@ from langchain.agents.middleware import before_model
 from langgraph.runtime import Runtime
 from langchain_core.runnables import RunnableConfig
 from typing import Any, TypedDict
-from langgraph.config import get_config
+from src.util.configurable import resolve_configurable_value
 
 
 # 1. 配置工具
@@ -63,11 +63,7 @@ async def inject_memory_middleware(
 
     user_query = messages[-1].content
 
-    config = get_config()
-    configurable = config.get("configurable", {})
-    user_id = configurable.get("user_id") or configurable.get(
-        "thread_id", "default_user"
-    )
+    user_id = resolve_configurable_value("user_id", "default_user")
 
     try:
         memory_context = await memory_manager.search_memories(user_query, user_id)
@@ -117,11 +113,7 @@ async def archive_memory_middleware(
     if len(messages) < 2:
         return
 
-    config = get_config()
-    configurable = config.get("configurable", {})
-    user_id = configurable.get("user_id") or configurable.get(
-        "thread_id", "default_user"
-    )
+    user_id = resolve_configurable_value("user_id", "default_user")
 
     # 提取最后一次有效互动
     user_input = ""
