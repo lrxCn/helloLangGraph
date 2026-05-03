@@ -12,7 +12,9 @@ dependencies = [
     "langchain>=1.2.17",
     "langchain-openai>=1.2.1",
     "langgraph>=1.0.0",
+    "mem0ai[nlp]>=2.0.1",
     "python-dotenv>=1.0.1",
+    "qdrant-client>=1.17.1",
 ]
 
 
@@ -24,11 +26,23 @@ requires = ["setuptools>=73.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["langgraph.templates.agent", "agent", "config"]
+packages = [
+    "langgraph.templates.agent",
+    "agent",
+    "config",
+    "util",
+    "src",
+    "src.config",
+    "src.util",
+]
 [tool.setuptools.package-dir]
 "langgraph.templates.agent" = "src/agent"
 "agent" = "src/agent"
 "config" = "src/config"
+"util" = "src/util"
+"src" = "src"
+"src.config" = "src/config"
+"src.util" = "src/util"
 
 
 [tool.setuptools.package-data]
