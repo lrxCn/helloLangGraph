@@ -1,7 +1,6 @@
-"""New LangGraph Agent.
+"""Agent package.
 
-This module defines the agent package.
+Keep package init minimal to avoid graph import side effects and cycles.
 """
 
-# 清理了导致循环导入和命名冲突的自动加载逻辑
-__all__ = []
+__all__: list[str] = []

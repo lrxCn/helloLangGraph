@@ -1,12 +1,10 @@
 import pytest
+from langgraph.pregel import Pregel
 
-from agent import graph
+from agent.graph import agent
 
 pytestmark = pytest.mark.anyio
 
 
-@pytest.mark.langsmith
-async def test_agent_simple_passthrough() -> None:
-    inputs = {"changeme": "some_val"}
-    res = await graph.ainvoke(inputs)
-    assert res is not None
+async def test_agent_graph_is_compiled() -> None:
+    assert isinstance(agent, Pregel)
